@@ -1,14 +1,14 @@
 name:                generic-lift
-version:             0.1.0.0
--- synopsis:
--- description:
-homepage:            https://github.com/githubuser/generic-lift#readme
+version:             1.0.0
+synopsis:            Lift any pure function over any Applicative stack.
+description:         See haddocks for examples
+homepage:            https://github.com/aaronallen8455/generic-lift#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2019 Author name here
-category:            Web
+author:              Aaron Allen
+maintainer:          aaronallen8455@gmail.com
+copyright:           2019 Aaron Allen
+category:            Lift, Applicative, Traversal, Foldable, Functor
 build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
@@ -21,4 +21,4 @@ library
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/generic-lift
+  location: https://github.com/aaronallen8455/generic-lift

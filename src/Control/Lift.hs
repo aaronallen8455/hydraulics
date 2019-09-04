@@ -18,88 +18,127 @@ module Control.Lift
   ) where
 
 import           Data.Foldable (foldl', traverse_)
-import           Data.Functor.Compose (Compose(..))
+import           Data.Functor.Compose (Compose)
+import           Data.Coerce (Coercible, coerce)
 
+-- | Lift any pure function over any @Applicative@ stack.
+--
+-- >>> liftAll @[[Int]] @Int (+) [[1]] [[2]]
+-- [[3]]
+--
+-- >>> liftAll @(Maybe [String]) @String (,,) (Just ["one"]) (Just ["two"]) (Just ["three", "four"])
+-- Just [("one","two","three"),("one","two","four")]
 liftAll :: forall w a b d n g.
         ( CountArgs b ~ n
         , Applicative g
         , EmbedDepth a w ~ d
         , ComposeUntil d w a ~ g a
         , Applyable n d g b
-        , Comp d w a
+        , Coercible w (g a)
         )
         => (a -> b) -> w -> App n d g b
-liftAll f = apply @n @d @g . fmap f . comp @d @w @a
+liftAll f = apply @n @d . fmap @g f . coerce
 
+-- | Apply an @Applicative@ effect across any @Traversable@ stack.
+--
+-- >>> traverseAll @(Maybe [Int]) @Int print (Just [1,2,3])
+-- 1
+-- 2
+-- 3
+-- Just [(),(),()]
 traverseAll :: forall w a b d f g res.
             ( EmbedDepth a w ~ d
             , ComposeUntil d w a ~ g a
             , FlattenUntil d (g b) b ~ res
             , Applicative f
             , Traversable g
-            , Decomp d (g b) b
-            , Comp d w a
+            , Coercible res (g b)
+            , Coercible w (g a)
             )
             => (a -> f b) -> w -> f res
-traverseAll f = fmap (decomp @d @(g b) @b) . traverse f . comp @d @w @a
+traverseAll f = fmap coerce . traverse @g f . coerce
 
+-- | Apply an @Applicative@ effect across any @Foldable@ stack, discarding the result.
+--
+-- >>> traverseAll_ @[Maybe [Int]] @Int print [Just [1,2,3], Nothing, Just [4]]
+-- 1
+-- 2
+-- 3
+-- 4
 traverseAll_ :: forall w a b d f g.
              ( EmbedDepth a w ~ d
              , ComposeUntil d w a ~ g a
              , Foldable g
              , Applicative f
-             , Comp d w a
+             , Coercible w (g a)
              )
              => (a -> f b) -> w -> f ()
-traverseAll_ f = traverse_ f . comp @d @w @a
+traverseAll_ f = traverse_ @g f . coerce
 
+-- | Map over any @Functor@ stack.
+--
+-- >>> fmapAll @[Either String Int] @Int (*2) [Right 3, Left "nope", Right 5]
+-- [Right 6,Left "nope",Right 10]
 fmapAll :: forall w a b d f res.
         ( EmbedDepth a w ~ d
         , FlattenUntil d (f b) b ~ res
         , ComposeUntil d w a ~ f a
-        , Decomp d (f b) b
         , Functor f
-        , Comp d w a
+        , Coercible w (f a)
+        , Coercible res (f b)
         )
         => (a -> b) -> w -> res
-fmapAll f = decomp @d @(f b) @b . fmap f . comp @d @w @a
+fmapAll f = coerce . fmap @f f . coerce
 
+-- | Turn every element of a @Foldable@ stack into a @Monoid@ then combine them.
+--
+-- >>> foldMapAll @[Maybe[Int]] @Int Sum [Just [1,2,3], Nothing, Just [4,5]]
+-- Sum {getSum = 15}
 foldMapAll :: forall w a m d f.
            ( EmbedDepth a w ~ d
            , ComposeUntil d w a ~ f a
            , Foldable f
            , Monoid m
-           , Comp d w a
+           , Coercible w (f a)
            )
            => (a -> m) -> w -> m
-foldMapAll f = foldMap f . comp @d @w @a
+foldMapAll f = foldMap @f f . coerce
 
+-- | Right fold over any @Foldable@ stack.
+--
+-- >>> foldrAll @[[Int]] @Int (\x acc -> acc ++ show x) [] [[1,2],[3]]
+-- "321"
 foldrAll :: forall w a b d f res.
          ( EmbedDepth a w ~ d
          , ComposeUntil d w a ~ f a
          , Foldable f
-         , Comp d w a
+         , Coercible w (f a)
          )
          => (a -> b -> b) -> b -> w -> b
-foldrAll f b = foldr f b . comp @d @w @a
+foldrAll f b = foldr @f f b . coerce
 
+-- | Left fold over any @Foldable@ stack.
+--
+-- >>> foldlAll @[[Int]] @Int (\acc x -> acc ++ show x) [] [[1,2],[3]]
+-- "123"
 foldlAll :: forall w a b d f res.
          ( EmbedDepth a w ~ d
          , ComposeUntil d w a ~ f a
          , Foldable f
-         , Comp d w a
+         , Coercible w (f a)
          )
          => (b -> a -> b) -> b -> w -> b
-foldlAll f b = foldl f b . comp @d @w @a
+foldlAll f b = foldl @f f b . coerce
 
-foldlAll' :: forall w d a b f res.
+-- | Strict left fold over any @Foldable@ stack.
+foldlAll' :: forall w a b d f res.
           ( EmbedDepth a w ~ d
           , ComposeUntil d w a ~ f a
           , Foldable f
-          , Comp d w a
+          , Coercible w (f a)
           )
          => (b -> a -> b) -> b -> w -> b
-foldlAll' f b = foldl' f b . comp @d @w @a
+foldlAll' f b = foldl' @f f b . coerce
 
 --------------------------------------------------------------------------------
 -- Type classes
@@ -109,61 +148,19 @@ class (CountArgs f ~ n) => Applyable n d g f where
   apply :: g f -> App n d g f
 
 instance ( CountArgs f ~ Z
-         , Decomp d (g f) f
+         , Coercible (FlattenUntil d (g f) f) (g f)
          ) => Applyable Z d g f where
-  apply = decomp @d @(g f) @f
+  apply = coerce
   {-# INLINE apply #-}
 
 instance ( Applyable n d g b
          , FlattenUntil d (g a) a ~ w
          , ComposeUntil d w a ~ g a
          , Applicative g
-         , Comp d w a
+         , Coercible w (g a)
          ) => Applyable (S n) d g (a -> b) where
-  apply gf = apply @n @d @g @b . (gf <*>) . comp @d @w @a
+  apply gf = apply @n @d @g @b . (gf <*>) . coerce
   {-# INLINE apply #-}
-
-class (EmbedDepth a f ~ n) => Comp n f a where
-  comp :: f -> ComposeUntil n f a
-
-instance Comp Z a a where
-  comp = id
-  {-# INLINE comp #-}
-
-instance (EmbedDepth a (f a) ~ S Z) => Comp (S Z) (f a) a where
-  comp = id
-  {-# INLINE comp #-}
-
-instance ( Comp (S n) g a
-         , EmbedDepth a (f g) ~ S (S n)
-         , ComposeUntil (S n) g a ~ w a
-         , ComposeUntil (S (S n)) (f g) a ~ Compose f w a
-         , Functor f
-         ) => Comp (S (S n)) (f g) a where
-  comp = Compose . fmap (comp @(S n) @g @a)
-  {-# INLINE comp #-}
-
-class EmbedDepth a (FlattenUntil n f a) ~ n => Decomp n f a where
-  decomp :: f -> FlattenUntil n f a
-
-instance Decomp Z a a where
-  decomp = id
-  {-# INLINE decomp #-}
-
-instance ( EmbedDepth a (FlattenUntil ('S 'Z) fa a) ~ S Z
-         , FlattenUntil ('S 'Z) fa a ~ fa
-         ) => Decomp (S Z) fa a where
-  decomp = id
-  {-# INLINE decomp #-}
-
-instance ( Decomp n (g a) a
-         , FlattenUntil n (g a) a ~ w
-         , FlattenUntil (S n) (Compose f g a) a ~ f w
-         , EmbedDepth a (f w) ~ S n
-         , Functor f
-         ) => Decomp (S n) (Compose f g a) a where
-  decomp = fmap (decomp @n @(g a) @a) . getCompose
-  {-# INLINE decomp #-}
 
 data Nat = Z | S Nat
 
