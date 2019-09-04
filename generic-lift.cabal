@@ -1,14 +1,44 @@
 name:                generic-lift
 version:             1.0.0
 synopsis:            Lift any pure function over any Applicative stack.
-description:         See haddocks for examples
+description:
+  This package contains a family of functions based on familiar 'Applicative',
+  'Functor', 'Traversal', and 'Foldable' methods except that they operate on
+  \"stacks\" of arbitrary depth.
+  .
+  'liftAll' is like the 'liftA*' functions in this regard but it also has the
+  ability to lift a function of arbitrary arity.
+  .
+  You will generally want to have <https://gitlab.haskell.org/ghc/ghc/wikis/type-application @TypeApplications@> turned on in order to
+  help the compiler along. The first type parameter is the stack and the second
+  is just the value within that stack. In the case of 'liftAll', use the type of
+  the first argument to the lifted function.
+  For example:
+  > liftAll @[Maybe [Int]] @Int (+) [Just [3]] [Just [6, 7]]
+  > -- [Just [9,10]]
+  >
+  > data Foo = Foo Int String Double
+  > liftAll @[[Int]] @Int Foo [[2]] [["string"]] [[5]]
+  > -- [[Foo 2 "string" 5.0]]
+  >
+  > fmapAll @[Maybe String] @String length [Just "string"]
+  > -- [Just 6]
+  >
+  > traverseAll @(Either String [Int]) @Int print (Right [1,2,3])
+  > -- 1
+  > -- 2
+  > -- 3
+  > -- Right [(),(),()]
+  .
+  By turning on @FlexibleContexts@, @TypeFamilies@, and @AllowAmbiguousTypes@,
+  you can often forego supplying one or both of these type arguments
 homepage:            https://github.com/aaronallen8455/generic-lift#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Aaron Allen
 maintainer:          aaronallen8455@gmail.com
 copyright:           2019 Aaron Allen
-category:            Lift, Applicative, Traversal, Foldable, Functor
+category:            Control, Utils
 build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10

@@ -18,7 +18,7 @@ module Control.Lift
   ) where
 
 import           Data.Foldable (foldl', traverse_)
-import           Data.Functor.Compose (Compose)
+import           Data.Functor.Compose (Compose(..))
 import           Data.Coerce (Coercible, coerce)
 
 -- | Lift any pure function over any @Applicative@ stack.
@@ -90,7 +90,7 @@ fmapAll :: forall w a b d f res.
         => (a -> b) -> w -> res
 fmapAll f = coerce . fmap @f f . coerce
 
--- | Turn every element of a @Foldable@ stack into a @Monoid@ then combine them.
+-- | Turn every embeded element of a @Foldable@ stack into a @Monoid@ then combine them.
 --
 -- >>> foldMapAll @[Maybe[Int]] @Int Sum [Just [1,2,3], Nothing, Just [4,5]]
 -- Sum {getSum = 15}
