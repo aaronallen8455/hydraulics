@@ -3,17 +3,23 @@ version:             1.0.0
 synopsis:            Lift any pure function over any Applicative stack.
 description:
   This package contains a family of functions based on familiar 'Applicative',
-  'Functor', 'Traversal', and 'Foldable' methods except that they operate on
-  \"stacks\" of arbitrary depth.
+  'Functor', 'Traversable', and 'Foldable' methods with the special property
+  that they operate on \"stacks\" of arbitrary depth.
   .
   'liftAll' is like the 'liftA*' functions in this regard but it also has the
   ability to lift a function of arbitrary arity.
   .
-  You will generally want to have <https://gitlab.haskell.org/ghc/ghc/wikis/type-application @TypeApplications@> turned on in order to
-  help the compiler along. The first type parameter is the stack and the second
-  is just the value within that stack. In the case of 'liftAll', use the type of
-  the first argument to the lifted function.
+  Note that the term \"stack\" refers to something like:
+  .
+  > Maybe [Either Bool [Int]]
+  .
+  You will generally want to have <https://gitlab.haskell.org/ghc/ghc/wikis/type-application TypeApplications> turned on so you
+  can supply a couple type arguments that the compiler is not able to infer on it's own.
+  The first of these is the type for the stack and the second is the type of
+  the focused value within that stack.
+  In the case of 'liftAll', use the type of the first argument to the lifted function.
   For example:
+  .
   > liftAll @[Maybe [Int]] @Int (+) [Just [3]] [Just [6, 7]]
   > -- [Just [9,10]]
   >
@@ -30,8 +36,10 @@ description:
   > -- 3
   > -- Right [(),(),()]
   .
+  (Additional examples are in the haddocks.)
+  .
   By turning on @FlexibleContexts@, @TypeFamilies@, and @AllowAmbiguousTypes@,
-  you can often forego supplying one or both of these type arguments
+  you can often forego supplying one or both of these type arguments.
 homepage:            https://github.com/aaronallen8455/generic-lift#readme
 license:             BSD3
 license-file:        LICENSE
