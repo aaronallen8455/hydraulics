@@ -6,7 +6,7 @@
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE AllowAmbiguousTypes   #-}
 {-# LANGUAGE UndecidableInstances  #-}
------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- |
 -- Module      :  Control.Lift
 -- Copyright   :  (C) 2019 Aaron Allen
@@ -15,7 +15,7 @@
 -- Stability   :  provisional
 -- Portability :  TypeFamilies, DataKinds, TypeApplications
 --
-----------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 module Control.Lift
   ( liftAll
   , traverseAll

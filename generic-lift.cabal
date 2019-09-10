@@ -4,37 +4,42 @@ synopsis:            Lift any pure function over any Applicative stack.
 description:
   This package contains a family of functions based on familiar 'Applicative',
   'Functor', 'Traversable', and 'Foldable' methods with the special property
-  that they operate on \"stacks\" of arbitrary depth.
+  that they operate on stacks of arbitrary depth.
   .
-  'liftAll' is like the 'liftA*' functions in this regard but it also has the
-  ability to lift a function of arbitrary arity.
+  For example, 'liftAll' is like the 'liftA*' functions except it can lift a
+  function through multiple layers of @Applicative@s instead of just one. Additionally,
+  it has the ability to lift a function of arbitrary arity.
   .
-  Note that the term \"stack\" refers to something like:
+  Usage of the term \"stack\" in this documentation refers to something like
   .
   > Maybe [Either Bool [Int]]
   .
-  You will generally want to have <https://gitlab.haskell.org/ghc/ghc/wikis/type-application TypeApplications> turned on so you
-  can supply a couple type arguments that the compiler is not able to infer on it's own.
-  The first of these is the type for the stack and the second is the type of
-  the focused value within that stack.
+  where @Int@ is embedded in a nesting of types that all share some common
+  interface, such as @Applicative@.
+  .
+  You will generally want to have <https://gitlab.haskell.org/ghc/ghc/wikis/type-application TypeApplications> turned on so that you
+  can easily supply a couple of type arguments that the compiler is not able to
+  infer on it's own. The first of these is the type for the stack and the
+  second is the type of the focused value within that stack.
   In the case of 'liftAll', use the type of the first argument to the lifted function.
   For example:
   .
-  > liftAll @[Maybe [Int]] @Int (+) [Just [3]] [Just [6, 7]]
-  > -- [Just [9,10]]
-  >
-  > data Foo = Foo Int String Double
-  > liftAll @[[Int]] @Int Foo [[2]] [["string"]] [[5]]
-  > -- [[Foo 2 "string" 5.0]]
-  >
-  > fmapAll @[Maybe String] @String length [Just "string"]
-  > -- [Just 6]
-  >
-  > traverseAll @(Either String [Int]) @Int print (Right [1,2,3])
-  > -- 1
-  > -- 2
-  > -- 3
-  > -- Right [(),(),()]
+  >>> :set -XTypeApplications
+  >>> liftAll @[Maybe [Int]] @Int (+) [Just [3]] [Just [6, 7]]
+  [Just [9,10]]
+
+  >>> data Foo = Foo Int String Double deriving Show
+  >>> liftAll @[[Int]] @Int Foo [[2]] [["string"]] [[5]]
+  [[Foo 2 "string" 5.0]]
+
+  >>> fmapAll @[Maybe String] @String length [Just "string"]
+  [Just 6]
+
+  >>> traverseAll @(Either String [Int]) @Int print (Right [1,2,3])
+  1
+  2
+  3
+  Right [(),(),()]
   .
   (Additional examples are in the haddocks.)
   .
