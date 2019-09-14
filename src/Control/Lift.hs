@@ -36,7 +36,7 @@ import           Data.Coerce (Coercible, coerce)
 
 -- | Lift any pure function over any @Applicative@ stack.
 --
--- >>> liftAll @[[Int]] @Int (+) [[1]] [[2]]
+-- >>> liftAll @[[()]] (+) [[1::Int]] [[2]]
 -- [[3]]
 --
 -- >>> liftAll @(Maybe [()]) (,,) (Just ["one"]) (Just ["two"]) (Just ["three", "four"])
@@ -61,7 +61,7 @@ liftAll' :: forall s g f d n.
          , Coercible s (g ())
          )
          => s -> f -> App n d g f
-liftAll' s f = apply @n @d . fmap (const f) $ coerce @s @(g ()) s
+liftAll' _ = apply @n @d . pure @g
 
 -- | Apply an @Applicative@ effect across any @Traversable@ stack.
 --
@@ -73,8 +73,8 @@ liftAll' s f = apply @n @d . fmap (const f) $ coerce @s @(g ()) s
 traverseAll :: forall s a b d f g res sa.
             ( EmbedDepth () s ~ d
             , ComposeUntil d s ~ g ()
-            , FlattenUntil d (g b) b ~ res
-            , FlattenUntil d (g a) a ~ sa
+            , FlattenUntil d (g b) ~ res
+            , FlattenUntil d (g a) ~ sa
             , Applicative f
             , Traversable g
             , Coercible res (g b)
@@ -107,8 +107,8 @@ traverseAll_ f = traverse_ @g f . coerce @sa @(g a)
 -- [Right 6,Left "nope",Right 10]
 fmapAll :: forall s sa a b d f res.
         ( EmbedDepth () s ~ d
-        , FlattenUntil d (f b) b ~ res
-        , FlattenUntil d (f a) a ~ sa
+        , FlattenUntil d (f b) ~ res
+        , FlattenUntil d (f a) ~ sa
         , ComposeUntil d s ~ f ()
         , Functor f
         , Coercible sa (f a)
@@ -175,13 +175,13 @@ class (CountArgs f ~ n) => Applyable n d g f where
   apply :: g f -> App n d g f
 
 instance ( CountArgs f ~ Z
-         , Coercible (FlattenUntil d (g f) f) (g f)
+         , Coercible (FlattenUntil d (g f)) (g f)
          ) => Applyable Z d g f where
   apply = coerce
   {-# INLINE apply #-}
 
 instance ( Applyable n d g b
-         , FlattenUntil d (g a) a ~ s
+         , FlattenUntil d (g a) ~ s
          , ComposeUntil d s ~ g a
          , Applicative g
          , Coercible s (g a)
@@ -204,8 +204,8 @@ type family EmbedDepth a s :: Nat where
   EmbedDepth a (s b) = S (EmbedDepth a b)
 
 type family App (n :: Nat) (d :: Nat) g x where
-  App (S n) d g (a -> b) = FlattenUntil d (g a) a -> App n d g b
-  App Z d g a = FlattenUntil d (g a) a
+  App (S n) d g (a -> b) = FlattenUntil d (g a) -> App n d g b
+  App Z d g a = FlattenUntil d (g a)
 
 type family Embed f g where
   Embed f (g a) = Compose f g a
@@ -220,8 +220,8 @@ type family Extract f g where
   Extract f (Compose g h a) = f (g (h a))
   Extract f a = f a
 
-type family FlattenUntil n f a where
-  FlattenUntil Z a a = a
-  FlattenUntil (S Z) (f a) a = f a
-  FlattenUntil (S n) (Compose f g a) a = Extract f (FlattenUntil n (g a) a)
+type family FlattenUntil n f where
+  FlattenUntil Z a = a
+  FlattenUntil (S Z) (f a) = f a
+  FlattenUntil (S n) (Compose f g a) = Extract f (FlattenUntil n (g a))
 
