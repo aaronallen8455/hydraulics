@@ -6,7 +6,6 @@
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE AllowAmbiguousTypes   #-}
 {-# LANGUAGE UndecidableInstances  #-}
-{-# LANGUAGE FlexibleContexts      #-}
 --------------------------------------------------------------------------------
 -- |
 -- Module      :  Control.Lift
@@ -19,7 +18,6 @@
 --------------------------------------------------------------------------------
 module Control.Lift
   ( liftAll
-  , liftAll'
   , traverseAll
   , traverseAll_
   , fmapAll
@@ -27,6 +25,7 @@ module Control.Lift
   , foldrAll
   , foldlAll
   , foldlAll'
+  , concatAll
   , module Data.Functor.Compose
   ) where
 
@@ -51,17 +50,6 @@ liftAll :: forall s f g d n.
         )
         => f -> App n d g f
 liftAll = apply @n @d . pure @g
-
-liftAll' :: forall s g f d n.
-         ( CountArgs f ~ n
-         , Applicative g
-         , EmbedDepth () s ~ d
-         , ComposeUntil d s ~ g ()
-         , Applyable n d g f
-         , Coercible s (g ())
-         )
-         => s -> f -> App n d g f
-liftAll' _ = apply @n @d . pure @g
 
 -- | Apply an @Applicative@ effect across any @Traversable@ stack.
 --
@@ -166,6 +154,19 @@ foldlAll' :: forall s sa a b d f res.
           )
          => (b -> a -> b) -> b -> sa -> b
 foldlAll' f b = foldl' @f f b . coerce
+
+-- | Concatenates any @Foldable@ stack down to a list.
+--
+-- >>> concatAll @(Maybe [[()]]) $ Just [[2], [3,4]]
+-- [2,3,4]
+concatAll :: forall s sa a b d f res.
+          ( EmbedDepth [()] s ~ d
+          , ComposeUntil d sa ~ f [a]
+          , Foldable f
+          , Coercible sa (f [a])
+          )
+         => sa -> [a]
+concatAll = concat @f . coerce
 
 --------------------------------------------------------------------------------
 -- Type classes
