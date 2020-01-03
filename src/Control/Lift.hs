@@ -253,10 +253,6 @@ type family ComposeUntil n f where
   ComposeUntil (S Z) (f a) = f a
   ComposeUntil (S n) (f b) = Embed f (ComposeUntil n b)
 
-type family Extract f g where
-  Extract f (Compose g h a) = f (g (h a))
-  Extract f a = f a
-
 type family FlattenUntil n f where
   FlattenUntil Z a = a
   FlattenUntil (S Z) (f a) = f a

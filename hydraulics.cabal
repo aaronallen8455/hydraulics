@@ -8,7 +8,7 @@ description:
   .
   For example, 'liftAll' is like the 'liftA2' and 'liftA3' functions except that it can lift a
   function through multiple layers of @Applicative@s instead of just one. Additionally,
-  it can lift a function of arbitrary arity, not just a 2 argument function like 'liftA2'.
+  it can lift a function of arbitrary arity, not just a 2 argument function like with 'liftA2'.
   .
   The term \"stack\" is used in this library's documentation to refer
   to something like
@@ -19,10 +19,10 @@ description:
   interface, such as @Applicative@, @Traversable@, or @Foldable@.
   .
   It's necessary to turn on <https://gitlab.haskell.org/ghc/ghc/wikis/type-application TypeApplications>
-  so that you can supply a type argument that tells the compiler what the stack you are operating is.
+  so that you can supply a type argument that tells the compiler about the stack you are operating on.
   You specify the stack by giving it's type with @()@ as the embedded value. The @()@ should be at the level
   in the stack at which your target value is embedded.
-  For example:
+  Here is an example GHCi session:
   .
   >>> :set -XTypeApplications
   >>> liftAll @[Maybe [()]] (+) [Just [3 :: Int]] [Just [6, 7]]
