@@ -1,25 +1,27 @@
-name:                generic-lift
+name:                hydraulics
 version:             1.0.0
 synopsis:            Lift any pure function over any Applicative stack.
 description:
   This package contains a family of functions based on familiar 'Applicative',
-  'Functor', 'Traversable', and 'Foldable' methods with the special property
-  that they operate on stacks of arbitrary depth.
+  'Functor', 'Traversable', and 'Foldable' methods but with the ability
+  to operate on stacks of arbitrary depth.
   .
-  For example, 'liftAll' is like the 'liftA*' functions except that it can lift a
+  For example, 'liftAll' is like the 'liftA2' and 'liftA3' functions except that it can lift a
   function through multiple layers of @Applicative@s instead of just one. Additionally,
-  it can lift a function of arbitrary arity.
+  it can lift a function of arbitrary arity, not just a 2 argument function like 'liftA2'.
   .
-  Usage of the term \"stack\" in this documentation refers to something like
+  The term \"stack\" is used in this library's documentation to refer
+  to something like
   .
   > Maybe [Either Bool [Int]]
   .
   where @Int@ is embedded in a nesting of types that all share some common
-  interface, such as @Applicative@.
+  interface, such as @Applicative@, @Traversable@, or @Foldable@.
   .
-  You will want to have <https://gitlab.haskell.org/ghc/ghc/wikis/type-application TypeApplications> turned on so that you
-  can supply a type argument that the compiler is not able to
-  infer on it's own. This is the type of the stack with @()@ as the embedded value.
+  It's necessary to turn on <https://gitlab.haskell.org/ghc/ghc/wikis/type-application TypeApplications>
+  so that you can supply a type argument that tells the compiler what the stack you are operating is.
+  You specify the stack by giving it's type with @()@ as the embedded value. The @()@ should be at the level
+  in the stack at which your target value is embedded.
   For example:
   .
   >>> :set -XTypeApplications
@@ -40,7 +42,7 @@ description:
   Right [(),(),()]
   .
   (Additional examples are in the haddocks.)
-homepage:            https://github.com/aaronallen8455/generic-lift#readme
+homepage:            https://github.com/aaronallen8455/hydraulics#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Aaron Allen
@@ -59,4 +61,4 @@ library
 
 source-repository head
   type:     git
-  location: https://github.com/aaronallen8455/generic-lift
+  location: https://github.com/aaronallen8455/hydraulics

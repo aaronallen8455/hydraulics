@@ -20,6 +20,8 @@ module Control.Lift
   ( liftAll
   , traverseAll
   , traverseAll_
+  , sequenceAll
+  , sequenceAll_
   , fmapAll
   , foldMapAll
   , foldrAll
@@ -29,7 +31,7 @@ module Control.Lift
   , module Data.Functor.Compose
   ) where
 
-import           Data.Foldable (foldl', traverse_)
+import           Data.Foldable (foldl', sequence_, traverse_)
 import           Data.Functor.Compose (Compose(..))
 import           Data.Coerce (Coercible, coerce)
 
@@ -88,6 +90,40 @@ traverseAll_ :: forall s a b sa d f g.
              )
              => (a -> f b) -> sa -> f ()
 traverseAll_ f = traverse_ @g f . coerce @sa @(g a)
+
+-- | Run the @Applicative@ effects embedded in a @Traversable@ stack.
+--
+-- >>> sequenceAll @[Maybe ()] [Just (print 1), Nothing, Just (print 2)]
+-- 1
+-- 2
+-- [Just (), Nothing, Just ()]
+sequenceAll :: forall s a d f g res sfa.
+            ( EmbedDepth () s ~ d
+            , ComposeUntil d s ~ g ()
+            , FlattenUntil d (g (f a)) ~ sfa
+            , FlattenUntil d (g a) ~ res
+            , Applicative f
+            , Traversable g
+            , Coercible sfa (g (f a))
+            , Coercible res (g a)
+            )
+            => sfa -> f res
+sequenceAll = traverseAll @s @(f a) id
+
+-- | Run the @Applicative@ effects embedded in a @Foldable@ stack, discarding the result.
+--
+-- >>> sequenceAll_ @(Either () [()]) $ Right [print 1]
+-- 1
+sequenceAll_ :: forall s a d f g sfa.
+             ( EmbedDepth () s ~ d
+             , ComposeUntil d s ~ g ()
+             , ComposeUntil d sfa ~ g (f a)
+             , Applicative f
+             , Foldable g
+             , Coercible sfa (g (f a))
+             )
+             => sfa -> f ()
+sequenceAll_ = traverseAll_ @s id
 
 -- | Map over any @Functor@ stack.
 --
@@ -224,5 +260,5 @@ type family Extract f g where
 type family FlattenUntil n f where
   FlattenUntil Z a = a
   FlattenUntil (S Z) (f a) = f a
-  FlattenUntil (S n) (Compose f g a) = Extract f (FlattenUntil n (g a))
+  FlattenUntil (S n) (Compose f g a) = f (FlattenUntil n (g a))
 
