@@ -9,7 +9,7 @@
 --------------------------------------------------------------------------------
 -- |
 -- Module      :  Control.Lift
--- Copyright   :  (C) 2019 Aaron Allen
+-- Copyright   :  (C) 2020 Aaron Allen
 -- License     :  BSD-style (see the file LICENSE)
 -- Maintainer  :  Aaron Allen <aaronallen8455@gmail.com>
 -- Stability   :  provisional

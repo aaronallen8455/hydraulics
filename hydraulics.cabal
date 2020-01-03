@@ -47,7 +47,7 @@ license:             BSD3
 license-file:        LICENSE
 author:              Aaron Allen
 maintainer:          aaronallen8455@gmail.com
-copyright:           2019 Aaron Allen
+copyright:           2020 Aaron Allen
 category:            Control, Utils
 build-type:          Simple
 extra-source-files:  README.md
